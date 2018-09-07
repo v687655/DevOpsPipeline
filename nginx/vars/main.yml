@@ -1,4 +1,4 @@
 ---
 # vars file for nginx
-provisioner: Docker
-automation: Ansible
+provisioner_tool: Docker
+automation_tool: Ansible

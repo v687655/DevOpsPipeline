@@ -1,29 +1,16 @@
-FROM centos:6.7 
-MAINTAINER Jeganathan Swaminathan <jegan@tektutor.org> <http://www.tektutor.org> 
+FROM ubuntu:16.04
+MAINTAINER Jeganathan Swaminathan <jegan@tektutor.org> <http://www.tektutor.org>
 
-RUN yum install -y openssh-server openssh-clients
-
-# Set the password of root user to root
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
 RUN echo 'root:root' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-RUN usermod -aG wheel root 
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
-RUN sed -ri 's/^session\s+required\s+pam_loginuid.so$/session optional pam_loginuid.so/' /etc/pam.d/sshd
-
-# Disable root login &
-# Disable password login, only allow public key. 
-COPY sshd_config /etc/ssh/sshd_config
-COPY sudoers /etc/sudoers
-
-RUN mkdir -p /root/.ssh
 COPY authorized_keys /root/.ssh/authorized_keys
 
-# Add sshd running directory.
-RUN mkdir -m 700 /var/run/sshd
-
-# Add ssh key directory.
-RUN /sbin/service sshd start && /sbin/service sshd stop
-
 EXPOSE 22
-EXPOSE 80
+EXPOSE 80 
 CMD ["/usr/sbin/sshd", "-D"]
